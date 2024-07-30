@@ -6,7 +6,6 @@ const int MAX = 10000;
 const int MAX_USR = 56245;
 const char encoding_table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-
 int encode(char *in, size_t len, char *encoded, size_t *outlen)
 {
 	if (in == NULL || len == 1) 
@@ -40,15 +39,8 @@ int encode(char *in, size_t len, char *encoded, size_t *outlen)
 			*el++ = '=';
 	}
 
-	*outlen=(el-encoded-1);
-	fprintf(stderr, "--last byte is now: '%c'\n", *(el-1));
+	*outlen=(el-encoded);
 	return 0;
-}
-
-void output(char *encoded)
-{
-	printf("\033]52;c;%s\033\\",encoded);
-	fflush(stdout);
 }
 
 int main()
@@ -64,11 +56,7 @@ int main()
 		fprintf(stderr, "error: input is empty or errored, but im lazy, will not override.\n");
 		return 1;
 	}
-	// oh
-	// my
-	// god
-	//
-	
+
 	char *back = buf + bytes_read - 1;
 
 		while (back >= buf && (*back == '\n' || *back == '\r')) 
@@ -77,9 +65,6 @@ int main()
 		*(back+1) = '\0';
 
         size_t backpos=back-buf + 1;
-
-	fprintf(stderr, "back is now: %d",back-buf);
-	fprintf(stderr, "byte at the back is now %c", *(back+1));
 
 	size_t enc_size = backpos; 
 	if (enc_size % 3) 
@@ -100,11 +85,6 @@ int main()
 	encode_pos += 7;
 	encoded[encode_pos++] = '\x07';
 	 size_t written = fwrite(encoded, 1, encode_pos, stdout);
-	 fprintf(stderr, "write %u bytes to stdout, encode_pos was : `%u`\n", written, encode_pos);
 	 fflush(stdout);
-
-	//fprintf(stderr, "encoded, pos is %u, will write the whole\n", encode_pos);
-	//fwrite(encoded, 1, encode_pos, stdout);
-//	output(encoded);
 	return 0;
 }
