@@ -4,8 +4,6 @@
 
 const int MAX = 10000;
 const int MAX_USR = 56245;
-
-
 const char encoding_table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 
@@ -41,8 +39,9 @@ int encode(char *in, size_t len, char *encoded, size_t *outlen)
 		else
 			*el++ = '=';
 	}
-	*el = '\0';
-	*outlen=(el-encoded);
+
+	*outlen=(el-encoded-1);
+	fprintf(stderr, "--last byte is now: '%c'\n", *(el-1));
 	return 0;
 }
 
@@ -65,24 +64,47 @@ int main()
 		fprintf(stderr, "error: input is empty or errored, but im lazy, will not override.\n");
 		return 1;
 	}
-	buf[strcspn(buf, "\n")] = 0;
-	buf[bytes_read]='\0';
+	// oh
+	// my
+	// god
+	//
+	
+	char *back = buf + bytes_read - 1;
 
-	size_t enc_size = bytes_read; 
+		while (back >= buf && (*back == '\n' || *back == '\r')) 
+			back--;
+
+		*(back+1) = '\0';
+
+        size_t backpos=back-buf + 1;
+
+	fprintf(stderr, "back is now: %d",back-buf);
+	fprintf(stderr, "byte at the back is now %c", *(back+1));
+
+	size_t enc_size = backpos; 
 	if (enc_size % 3) 
 		enc_size += 3 - (enc_size % 3);
 	enc_size = (enc_size * 4) / 3;
 
 	char encoded[enc_size+1];
-	
-	size_t encode_pos;
-	int ret = encode(buf, bytes_read, encoded,  &encode_pos);
 
+	const char *prefix =  "\x1B]52;c;";
+	memcpy(encoded, prefix, strlen(prefix));
+
+	size_t encode_pos=0;
+	int ret = encode(buf, backpos, encoded+7, &encode_pos);
 	if (ret != 0) {
 		fprintf(stderr, "bigsad, failed to encode. wcyd.\n");
 		return ret;
 	}
+	encode_pos += 7;
+	encoded[encode_pos++] = '\x07';
+	 size_t written = fwrite(encoded, 1, encode_pos, stdout);
+	 fprintf(stderr, "write %u bytes to stdout, encode_pos was : `%u`\n", written, encode_pos);
+	 fflush(stdout);
 
-	output(encoded);
+	//fprintf(stderr, "encoded, pos is %u, will write the whole\n", encode_pos);
+	//fwrite(encoded, 1, encode_pos, stdout);
+//	output(encoded);
 	return 0;
 }
